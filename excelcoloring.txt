@@ -1,0 +1,47 @@
+function main(workbook: ExcelScript.Workbook) {
+    let sourceSheet = workbook.getWorksheet("Sheet1");
+    let sourceCell = sourceSheet.getRange("A1");
+    let targetSheet = workbook.getWorksheet("Sheet1");
+    let targetCell = targetSheet.getRange("B1");
+
+    // Example values for 3-scale color
+    let minValue = 0;
+    let maxValue = 100;
+    let midValue = 50;
+
+    let cellValue = sourceCell.getValue() as number;
+
+    // Calculate the position of the value in the gradient
+    let color: string;
+
+    if (cellValue <= midValue) {
+        // Interpolate between minValue (red) and midValue (yellow)
+        let redToYellow = interpolateColor([255, 0, 0], [255, 255, 0], (cellValue - minValue) / (midValue - minValue));
+        color = rgbToHex(redToYellow);
+    } else {
+        // Interpolate between midValue (yellow) and maxValue (green)
+        let yellowToGreen = interpolateColor([255, 255, 0], [0, 128, 0], (cellValue - midValue) / (maxValue - midValue));
+        color = rgbToHex(yellowToGreen);
+    }
+
+    // Apply the calculated color to the target cell
+    targetCell.getFormat().getFill().setColor(color);
+}
+
+// Function to interpolate between two colors
+function interpolateColor(color1: number[], color2: number[], factor: number): number[] {
+    let result = color1.slice();
+    for (let i = 0; i < 3; i++) {
+        result[i] = Math.round(result[i] + factor * (color2[i] - result[i]));
+    }
+    return result;
+}
+
+// Function to convert RGB to HEX
+function rgbToHex(rgb: number[]): string {
+    return "#" + rgb.map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+    }).join("");
+}
+
